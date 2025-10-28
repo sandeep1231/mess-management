@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: mess-management
+    env: node
+    plan: free
+    buildCommand: |
+      npm --prefix server ci
+      npm --prefix server run build
+      npm --prefix client ci
+      npm --prefix client run build -- --configuration production
+    startCommand: node server/dist/index.js
+    envVars:
+      - key: PORT
+        value: 10000
+      - key: MONGODB_URI
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+    autoDeploy: true

@@ -1,0 +1,11 @@
+{
+  "env": { "node": true, "es2022": true },
+  "parserOptions": { "ecmaVersion": 2022, "sourceType": "module" },
+  "extends": ["eslint:recommended", "plugin:import/recommended", "prettier"],
+  "plugins": ["simple-import-sort"],
+  "rules": {
+    "import/order": "off",
+    "simple-import-sort/imports": "error",
+    "simple-import-sort/exports": "error"
+  }
+}
