@@ -18,7 +18,9 @@ import { ApiService } from './shared/api.service';
         <ul class="navbar-nav me-auto mb-2 mb-lg-0">
           <li class="nav-item"><a class="nav-link" routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact:true}" data-bs-toggle="collapse" data-bs-target="#nav">Dashboard</a></li>
           <li class="nav-item"><a class="nav-link" routerLink="/manage" routerLinkActive="active" data-bs-toggle="collapse" data-bs-target="#nav">Manage</a></li>
+          <!-- Settings temporarily hidden
           <li class="nav-item"><a class="nav-link" routerLink="/settings" routerLinkActive="active" data-bs-toggle="collapse" data-bs-target="#nav">Settings</a></li>
+          -->
           <li class="nav-item" *ngIf="auth.isAdmin"><a class="nav-link" routerLink="/admin" routerLinkActive="active" data-bs-toggle="collapse" data-bs-target="#nav">Admin</a></li>
         </ul>
         <ng-container *ngIf="auth.token; else loggedOut">

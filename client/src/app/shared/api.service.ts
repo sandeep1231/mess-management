@@ -5,8 +5,32 @@ import { Expense, Meal, Member, Mess, SummaryResult } from './types';
 
 @Injectable({ providedIn: 'root' })
 export class ApiService {
-  private base = localStorage.getItem('mm.apiBase') || environment.apiBase;
+  private base = this.computeApiBase();
   constructor(private http: HttpClient) {}
+
+  private computeApiBase(){
+    const saved = localStorage.getItem('mm.apiBase');
+    const def = environment.apiBase;
+    // In production on Render (or any host), avoid using a saved localhost/127.* override or a different origin.
+    if (environment.production) {
+      try {
+        if (saved) {
+          const u = new URL(saved, window.location.origin);
+          const isLocal = /^(localhost|127\.|10\.|192\.168\.)/.test(u.hostname);
+          const differentOrigin = u.origin !== window.location.origin && saved.startsWith('http');
+          if (isLocal || differentOrigin) {
+            localStorage.removeItem('mm.apiBase');
+            return def; // typically '/api'
+          }
+        }
+      } catch {
+        // On parse error, fall back to default and clear
+        localStorage.removeItem('mm.apiBase');
+        return def;
+      }
+    }
+    return saved || def;
+  }
 
   setApiBase(url: string){
     this.base = url;
