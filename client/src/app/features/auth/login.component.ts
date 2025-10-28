@@ -81,11 +81,15 @@ export class LoginComponent {
   mode = signal<'login'|'signup'>('login');
 
   async ngOnInit(){
+    await this.refreshFirstUser();
+  }
+
+  async refreshFirstUser(){
     try {
       const res = await this.api.isFirstUser().toPromise();
       const isFirst = !!res?.firstUser;
       this.firstUser.set(isFirst);
-      if (!isFirst) this.registerRole = 'user';
+      this.registerRole = isFirst ? 'admin' : 'user';
     } catch {
       this.firstUser.set(false);
       this.registerRole = 'user';
@@ -99,22 +103,22 @@ export class LoginComponent {
       error: (e) => { this.msg = e?.error?.error || 'Login failed'; this.msgColor='red'; }
     });
   }
-  register(){
+  async register(){
     this.msg='';
-  const role = this.firstUser() ? this.registerRole : 'user';
+    const role = this.firstUser() ? this.registerRole : 'user';
     this.api.register(this.phone, this.password, role).subscribe({
-      next: (res) => {
+      next: async (res) => {
         if(res.approved && res.token && res.role){ this.auth.token = res.token; this.auth.role = res.role; this.api.getMe().subscribe({ next: me => this.auth.myPhone = me.phone, error: () => {} }); this.router.navigateByUrl('/'); }
         else { this.msg = 'Registered. Waiting for admin approval.'; this.msgColor='green'; }
+        await this.refreshFirstUser();
       },
-      error: (e) => { this.msg = e?.error?.error || 'Register failed'; this.msgColor='red'; }
+      error: async (e) => { this.msg = e?.error?.error || 'Register failed'; this.msgColor='red'; await this.refreshFirstUser(); }
     });
   }
-  toggleMode(){
+  async toggleMode(){
     if (this.mode()==='login') {
       this.mode.set('signup');
-      // Ensure role defaults based on first-user state
-      this.registerRole = this.firstUser() ? 'admin' : 'user';
+      await this.refreshFirstUser();
     } else {
       this.mode.set('login');
     }
