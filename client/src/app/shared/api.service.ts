@@ -15,28 +15,28 @@ export class ApiService {
     const isNative = typeof window !== 'undefined' && (window as any).Capacitor?.isNativePlatform?.() === true;
     // Use full Render URL for native apps
     const nativeApiBase = 'https://mess-management-ttus.onrender.com/api';
-    if (isNative) {
+    // if (isNative) {
       return nativeApiBase;
-    }
+    // }
     // In production on Render (or any host), avoid using a saved localhost/127.* override or a different origin.
-    if (environment.production) {
-      try {
-        if (saved) {
-          const u = new URL(saved, window.location.origin);
-          const isLocal = /^(localhost|127\.|10\.|192\.168\.)/.test(u.hostname);
-          const differentOrigin = u.origin !== window.location.origin && saved.startsWith('http');
-          if (isLocal || differentOrigin) {
-            localStorage.removeItem('mm.apiBase');
-            return def; // typically '/api'
-          }
-        }
-      } catch {
-        // On parse error, fall back to default and clear
-        localStorage.removeItem('mm.apiBase');
-        return def;
-      }
-    }
-    return saved || def;
+    // if (environment.production) {
+    //   try {
+    //     if (saved) {
+    //       const u = new URL(saved, window.location.origin);
+    //       const isLocal = /^(localhost|127\.|10\.|192\.168\.)/.test(u.hostname);
+    //       const differentOrigin = u.origin !== window.location.origin && saved.startsWith('http');
+    //       if (isLocal || differentOrigin) {
+    //         localStorage.removeItem('mm.apiBase');
+    //         return def; // typically '/api'
+    //       }
+    //     }
+    //   } catch {
+    //     // On parse error, fall back to default and clear
+    //     localStorage.removeItem('mm.apiBase');
+    //     return def;
+    //   }
+    // }
+    // return saved || def;
   }
 
   setApiBase(url: string){
