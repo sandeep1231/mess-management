@@ -41,16 +41,27 @@ app.get('*', (_req: Request, res: Response) => {
 
 const PORT = process.env.PORT ? Number(process.env.PORT) : 4000;
 const MONGODB_URI = process.env.MONGODB_URI as string | undefined;
+const DB_NAME = process.env.DB_NAME as string | undefined;
+const IS_PROD = process.env.NODE_ENV === 'production';
 
 async function start() {
   let uri = MONGODB_URI;
   if (!uri) {
+    if (IS_PROD) {
+      console.error('MONGODB_URI is not set. Refusing to start in production without a database.');
+      process.exit(1);
+    }
     const mem = await MongoMemoryServer.create();
     uri = mem.getUri();
     console.log('Using in-memory MongoDB for development');
   }
-  await mongoose.connect(uri!);
-  console.log('Connected to MongoDB');
+  if (DB_NAME) {
+    await mongoose.connect(uri!, { dbName: DB_NAME });
+    console.log(`Connected to MongoDB (db: ${DB_NAME})`);
+  } else {
+    await mongoose.connect(uri!);
+    console.log('Connected to MongoDB (default db)');
+  }
   app.listen(PORT, () => console.log(`API listening on http://localhost:${PORT}`));
 }
 
