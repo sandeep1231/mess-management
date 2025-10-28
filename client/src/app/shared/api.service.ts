@@ -11,6 +11,13 @@ export class ApiService {
   private computeApiBase(){
     const saved = localStorage.getItem('mm.apiBase');
     const def = environment.apiBase;
+    // Detect Capacitor/native environment
+    const isNative = typeof window !== 'undefined' && (window as any).Capacitor?.isNativePlatform?.() === true;
+    // Use full Render URL for native apps
+    const nativeApiBase = 'https://mess-management-ttus.onrender.com/api';
+    if (isNative) {
+      return nativeApiBase;
+    }
     // In production on Render (or any host), avoid using a saved localhost/127.* override or a different origin.
     if (environment.production) {
       try {
