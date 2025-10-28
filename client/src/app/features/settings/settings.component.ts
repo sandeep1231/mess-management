@@ -71,7 +71,7 @@ export class SettingsComponent {
       if (info.platform === 'android') {
         // Heuristic: use emulator IP; for physical device, suggest entering LAN IP
         if (info.isVirtual) {
-          this.apiBaseUrl = 'http://10.0.2.2:4001/api';
+          this.apiBaseUrl = 'http://localhost:4001/api';
           this.save();
         } else {
           const ip = prompt('Enter your PC LAN IP (e.g., 192.168.1.100):', '');
