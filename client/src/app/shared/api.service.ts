@@ -9,14 +9,23 @@ export class ApiService {
   constructor(private http: HttpClient) {}
 
   private computeApiBase(){
-    const saved = typeof window !== 'undefined' ? localStorage.getItem('mm.apiBase') : null;
+    const w: any = typeof window !== 'undefined' ? window : null;
+    const saved = w ? localStorage.getItem('mm.apiBase') : null;
     const def = environment.apiBase;
-    const isNative = typeof window !== 'undefined' && (window as any).Capacitor?.isNativePlatform?.() === true;
+    const isNative = !!(w && w.Capacitor?.isNativePlatform?.());
     const nativeApiBase = 'https://mess-management-ttus.onrender.com/api';
-    // Native builds always use deployed API
+    // 1) Native apps always use the deployed API (reliable public endpoint)
     if (isNative) return nativeApiBase;
-    // If a saved override exists and looks like an absolute http(s) URL, honor it; else use deployed default
+    // 2) Respect explicit absolute overrides
     if (saved && /^https?:\/\//.test(saved)) return saved;
+    // 3) If running on a non-localhost origin, prefer same-origin /api
+    const loc = w?.location as Location | undefined;
+    const host = loc?.hostname || '';
+    const isLocalHost = /^(localhost|127\.0\.0\.1|\[::1\])$/.test(host);
+    if (loc && !isLocalHost) {
+      return `${loc.origin}/api`;
+    }
+    // 4) Fallback to environment default (useful for local dev)
     return def;
   }
 
