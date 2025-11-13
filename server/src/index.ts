@@ -24,6 +24,8 @@ app.get('/health', (_req: Request, res: Response) => {
 
 // Public auth endpoints
 app.use('/auth', authRouter);
+// Optional alias so clients using an /api base can also call /api/auth/*
+app.use('/api/auth', authRouter);
 
 // Protect API routes
 app.use('/api', requireAuth, apiRouter);

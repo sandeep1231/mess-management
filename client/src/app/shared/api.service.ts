@@ -9,34 +9,15 @@ export class ApiService {
   constructor(private http: HttpClient) {}
 
   private computeApiBase(){
-    const saved = localStorage.getItem('mm.apiBase');
+    const saved = typeof window !== 'undefined' ? localStorage.getItem('mm.apiBase') : null;
     const def = environment.apiBase;
-    // Detect Capacitor/native environment
     const isNative = typeof window !== 'undefined' && (window as any).Capacitor?.isNativePlatform?.() === true;
-    // Use full Render URL for native apps
     const nativeApiBase = 'https://mess-management-ttus.onrender.com/api';
-    // if (isNative) {
-      return nativeApiBase;
-    // }
-    // In production on Render (or any host), avoid using a saved localhost/127.* override or a different origin.
-    // if (environment.production) {
-    //   try {
-    //     if (saved) {
-    //       const u = new URL(saved, window.location.origin);
-    //       const isLocal = /^(localhost|127\.|10\.|192\.168\.)/.test(u.hostname);
-    //       const differentOrigin = u.origin !== window.location.origin && saved.startsWith('http');
-    //       if (isLocal || differentOrigin) {
-    //         localStorage.removeItem('mm.apiBase');
-    //         return def; // typically '/api'
-    //       }
-    //     }
-    //   } catch {
-    //     // On parse error, fall back to default and clear
-    //     localStorage.removeItem('mm.apiBase');
-    //     return def;
-    //   }
-    // }
-    // return saved || def;
+    // Native builds always use deployed API
+    if (isNative) return nativeApiBase;
+    // If a saved override exists and looks like an absolute http(s) URL, honor it; else use deployed default
+    if (saved && /^https?:\/\//.test(saved)) return saved;
+    return def;
   }
 
   setApiBase(url: string){
@@ -71,6 +52,9 @@ export class ApiService {
     return this.http.post<{ token: string; role: 'admin' | 'user' }>(`${this.apiRoot}/auth/login`, { phone, password });
   }
   getMe() { return this.http.get<{ id: string; phone: string; role: 'admin' | 'user' }>(`${this.apiRoot}/auth/me`); }
+  changePassword(currentPassword: string, newPassword: string){
+    return this.http.post<{ success: true }>(`${this.apiRoot}/auth/change-password`, { currentPassword, newPassword });
+  }
   myMembers(){ return this.http.get<Array<{ _id: string; messId: string; name: string; phone?: string; active: boolean }>>(`${this.apiRoot}/auth/my-members`); }
   isFirstUser(){ return this.http.get<{ firstUser: boolean }>(`${this.apiRoot}/auth/first-user`); }
   setUserRole(id: string, role: 'admin'|'user') { return this.http.post(`${this.apiRoot}/auth/role/${id}`, { role }); }

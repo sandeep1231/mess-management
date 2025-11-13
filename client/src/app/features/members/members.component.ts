@@ -48,14 +48,6 @@ import { RouterLink } from '@angular/router';
           <button class="btn btn-outline-secondary" [class.active]="viewMode==='list'" (click)="setView('list')" title="List"><i class="bi bi-list"></i></button>
         </div>
       </div>
-      <div class="col-6 col-sm-3 col-lg-2">
-        <label class="form-label">Per page</label>
-        <select class="form-select" [(ngModel)]="pageSize" (ngModelChange)="onPageSizeChange()">
-          <option [ngValue]="8">8</option>
-          <option [ngValue]="12">12</option>
-          <option [ngValue]="24">24</option>
-        </select>
-      </div>
       <div class="col-12 col-lg-2 d-flex justify-content-lg-end align-items-end" *ngIf="auth.isAdmin && viewMode==='list'">
         <button class="btn btn-primary w-100" (click)="openAddModal()"><i class="bi bi-person-plus me-1"></i>Add member</button>
       </div>
@@ -227,9 +219,17 @@ import { RouterLink } from '@angular/router';
     <!-- Pagination -->
     <div class="d-flex align-items-center justify-content-between mt-3" *ngIf="filtered().length > 0 && !loading()">
       <div class="text-muted small">Showing {{ showFrom() }}–{{ showTo() }} of {{ filtered().length }}</div>
-      <div class="btn-group" role="group">
-        <button class="btn btn-outline-secondary" (click)="prevPage()" [disabled]="page<=1">Prev</button>
-        <button class="btn btn-outline-secondary" (click)="nextPage()" [disabled]="page>=totalPages()">Next</button>
+      <div class="d-flex align-items-center gap-2">
+        <label class="small text-muted me-1">Per page</label>
+        <select class="form-select form-select-sm w-auto" [(ngModel)]="pageSize" (ngModelChange)="onPageSizeChange()">
+          <option [ngValue]="8">8</option>
+          <option [ngValue]="12">12</option>
+          <option [ngValue]="24">24</option>
+        </select>
+        <div class="btn-group" role="group">
+          <button class="btn btn-outline-secondary btn-sm" (click)="prevPage()" [disabled]="page<=1">Prev</button>
+          <button class="btn btn-outline-secondary btn-sm" (click)="nextPage()" [disabled]="page>=totalPages()">Next</button>
+        </div>
       </div>
     </div>
 

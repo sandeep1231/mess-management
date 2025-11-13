@@ -19,6 +19,10 @@ export const routes: Routes = [
 		path: '', canActivate: [requireAuth],
 		loadComponent: () => import('./features/dashboard/dashboard.component').then(m => m.DashboardComponent)
 	},
+	{
+		path: 'profile', canActivate: [requireAuth],
+		loadComponent: () => import('./features/settings/settings.component').then(m => m.SettingsComponent)
+	},
   {
     path: 'member/:id', canActivate: [requireAuth],
     loadComponent: () => import('./features/member-detail/member-detail.component').then(m => m.MemberDetailComponent)

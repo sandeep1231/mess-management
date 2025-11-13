@@ -43,10 +43,10 @@ import { Router } from '@angular/router';
             <ng-template #userHelp><span class="form-text">New registrations are created with role User.</span></ng-template>
           </div>
           <div class="d-grid gap-2">
-            <button class="btn btn-primary" *ngIf="mode()==='login'" (click)="login()" [disabled]="!phone || password.length<6">
+            <button class="btn btn-primary" *ngIf="mode()==='login'" (click)="login()" [disabled]="!phone || phone.length<6 || password.length<6">
               <i class="bi bi-box-arrow-in-right me-1"></i> Login
             </button>
-            <button class="btn btn-success" *ngIf="mode()==='signup'" (click)="register()" [disabled]="!phone || password.length<6">
+            <button class="btn btn-success" *ngIf="mode()==='signup'" (click)="register()" [disabled]="!phone || phone.length<6 || password.length<6">
               <i class="bi bi-person-plus me-1"></i> Create account
             </button>
             <div class="text-center small text-muted">
@@ -100,7 +100,17 @@ export class LoginComponent {
     this.msg='';
     this.api.login(this.phone, this.password).subscribe({
       next: ({token, role}) => { this.auth.token = token; this.auth.role = role; this.api.getMe().subscribe({ next: me => this.auth.myPhone = me.phone, error: () => {} }); this.router.navigateByUrl('/'); },
-      error: (e) => { this.msg = e?.error?.error || 'Login failed'; this.msgColor='red'; }
+      error: (e) => {
+        const status = e?.status || e?.statusCode;
+        if (status === 401) {
+          this.msg = 'Invalid phone or password';
+        } else if (status === 403) {
+          this.msg = 'Not approved by admin yet';
+        } else {
+          this.msg = e?.error?.error || e?.error?.message || 'Login failed';
+        }
+        this.msgColor='red';
+      }
     });
   }
   async register(){

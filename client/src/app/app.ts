@@ -15,7 +15,7 @@ import { ApiService } from './shared/api.service';
         <span class="navbar-toggler-icon"></span>
       </button>
       <div class="collapse navbar-collapse" id="nav">
-        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+        <ul class="navbar-nav me-auto mb-2 mb-lg-0" *ngIf="showMainNav()">
           <li class="nav-item"><a class="nav-link" routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact:true}" data-bs-toggle="collapse" data-bs-target="#nav">Dashboard</a></li>
           <li class="nav-item"><a class="nav-link" routerLink="/manage" routerLinkActive="active" data-bs-toggle="collapse" data-bs-target="#nav">Manage</a></li>
           <!-- Settings temporarily hidden
@@ -25,10 +25,11 @@ import { ApiService } from './shared/api.service';
         </ul>
         <ng-container *ngIf="auth.token; else loggedOut">
           <span class="badge rounded-pill bg-primary me-3" [title]="auth.role ?? ''">{{ auth.isAdmin ? 'Admin' : 'User' }}</span>
+          <a class="btn btn-outline-secondary btn-sm me-2" routerLink="/profile" data-bs-toggle="collapse" data-bs-target="#nav"><i class="bi bi-person me-1"></i>Profile</a>
           <button class="btn btn-outline-danger btn-sm" (click)="logout()" data-bs-toggle="collapse" data-bs-target="#nav"><i class="bi bi-box-arrow-right me-1"></i>Logout</button>
         </ng-container>
         <ng-template #loggedOut>
-          <a class="btn btn-outline-primary btn-sm" routerLink="/login" data-bs-toggle="collapse" data-bs-target="#nav">Login</a>
+          <a class="btn btn-outline-primary btn-sm" routerLink="/login" *ngIf="!isLoginRoute()" data-bs-toggle="collapse" data-bs-target="#nav">Login</a>
         </ng-template>
       </div>
     </div>
@@ -44,6 +45,9 @@ export class App {
   auth = inject(AuthService);
   private router = inject(Router);
   private api = inject(ApiService);
+  private _isLoginRoute = signal(false);
+  isLoginRoute = () => this._isLoginRoute();
+  showMainNav = () => !!this.auth.token && !this._isLoginRoute();
   logout(){ this.auth.logout(); location.href = '/login'; }
 
   constructor(){
@@ -57,6 +61,7 @@ export class App {
     // Auto-close navbar collapse after any navigation ends
     this.router.events.subscribe((ev) => {
       if (ev instanceof NavigationEnd) {
+        this._isLoginRoute.set(ev.urlAfterRedirects.startsWith('/login'));
         const el = document.getElementById('nav');
         if (el && el.classList.contains('show')) {
           // Prefer Bootstrap's Collapse API when available (from bootstrap.bundle)
@@ -74,5 +79,7 @@ export class App {
         }
       }
     });
+    // Set initial route state
+    try { this._isLoginRoute.set(this.router.url.startsWith('/login')); } catch {}
   }
 }

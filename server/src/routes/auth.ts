@@ -10,11 +10,22 @@ import { requireAdmin, requireAuth } from './authMiddleware';
 
 export const authRouter = Router();
 
-const registerSchema = z.union([
-  z.object({ phone: z.string().min(6), password: z.string().min(6), role: z.enum(['admin','user']).optional() }),
-  z.object({ email: z.string().min(3), password: z.string().min(6), role: z.enum(['admin','user']).optional() }), // legacy support: treat email as phone input
-]);
-const loginSchema = registerSchema;
+// Accept either phone or email. Using a single schema with optional fields avoids
+// Union edge-cases where Zod can surface confusing errors when one branch fails.
+const credentialsSchema = z
+  .object({
+    phone: z.string().min(6).optional(),
+    email: z.string().min(3).optional(),
+    password: z.string().min(6),
+    role: z.enum(['admin', 'user']).optional(),
+  })
+  .refine((v) => !!(v.phone || v.email), {
+    path: ['phone'],
+    message: 'phone or email required',
+  });
+
+const registerSchema = credentialsSchema;
+const loginSchema = credentialsSchema;
 
 function signToken(userId: string, role: 'admin' | 'user') {
   const secret = process.env.JWT_SECRET || 'dev-secret-change-me';
@@ -72,6 +83,24 @@ authRouter.get(
     if (!user) return res.status(404).json({ error: 'User not found' });
     res.json({ id: user.id, phone: user.phone, role: (user as any).role || 'user' });
   },
+);
+
+// Change password for current user
+authRouter.post(
+  '/change-password',
+  requireAuth,
+  asyncHandler(async (req, res) => {
+    const body = z.object({ currentPassword: z.string().min(6), newPassword: z.string().min(6) }).parse(req.body);
+    const auth = req as any;
+    const user = await User.findById(auth.userId);
+    if (!user) return res.status(404).json({ error: 'User not found' });
+    const ok = await bcrypt.compare(body.currentPassword, user.passwordHash);
+    if (!ok) return res.status(400).json({ error: 'Current password is incorrect' });
+    const passwordHash = await bcrypt.hash(body.newPassword, 10);
+    user.passwordHash = passwordHash;
+    await user.save();
+    res.json({ success: true });
+  }),
 );
 
 // Is this the first user? Helps client decide whether to show admin option during signup

@@ -69,14 +69,7 @@ import { RouterLink } from '@angular/router';
               <option value="amount-asc">Amount ↑</option>
             </select>
           </div>
-          <div class="col-6 col-sm-3 col-lg-2">
-            <label class="form-label small mb-1">Per page</label>
-            <select class="form-select form-select-sm" [(ngModel)]="pageSize" (ngModelChange)="onPageSizeChange()">
-              <option [ngValue]="8">8</option>
-              <option [ngValue]="12">12</option>
-              <option [ngValue]="24">24</option>
-            </select>
-          </div>
+          
         </div>
 
         <div class="d-flex align-items-center flex-wrap gap-2 mt-2 small">
@@ -160,9 +153,17 @@ import { RouterLink } from '@angular/router';
     <!-- Pagination -->
     <div class="d-flex align-items-center justify-content-between mt-3" *ngIf="!loading() && list().length > 0">
       <div class="text-muted small">Showing {{ showFrom() }}–{{ showTo() }} of {{ list().length }}</div>
-      <div class="btn-group" role="group">
-        <button class="btn btn-outline-secondary btn-sm" (click)="prevPage()" [disabled]="page<=1">Prev</button>
-        <button class="btn btn-outline-secondary btn-sm" (click)="nextPage()" [disabled]="page>=totalPages()">Next</button>
+      <div class="d-flex align-items-center gap-2">
+        <label class="small text-muted me-1">Per page</label>
+        <select class="form-select form-select-sm w-auto" [(ngModel)]="pageSize" (ngModelChange)="onPageSizeChange()">
+          <option [ngValue]="8">8</option>
+          <option [ngValue]="12">12</option>
+          <option [ngValue]="24">24</option>
+        </select>
+        <div class="btn-group" role="group">
+          <button class="btn btn-outline-secondary btn-sm" (click)="prevPage()" [disabled]="page<=1">Prev</button>
+          <button class="btn btn-outline-secondary btn-sm" (click)="nextPage()" [disabled]="page>=totalPages()">Next</button>
+        </div>
       </div>
     </div>
   </div>
