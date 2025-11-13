@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { ApiService } from '../../shared/api.service';
 import { Device } from '@capacitor/device';
 import { AuthService } from '../../shared/auth.service';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-settings',
@@ -122,6 +123,11 @@ import { AuthService } from '../../shared/auth.service';
             <div class="muted small tip">Positive balance means others owe you; negative means you owe.</div>
           </div>
         </div>
+
+        <!-- lightweight toast -->
+        <div class="toast-wrap" *ngIf="toastVisible">
+          <div class="toast-item" [class.ok]="toastKind==='success'" [class.err]="toastKind==='error'">{{ toastMsg }}</div>
+        </div>
       </div>
 
       <div *ngIf="activeTab==='api'">
@@ -202,6 +208,12 @@ import { AuthService } from '../../shared/auth.service';
     .value { font-weight: 700; font-size: 1.2rem; }
     .tip { margin-top: .6rem; }
 
+  /* Toast */
+  .toast-wrap { position: fixed; top: 12px; right: 12px; z-index: 1100; }
+  .toast-item { background: #111827; color: #fff; padding: .6rem .8rem; border-radius: 10px; box-shadow: 0 8px 24px rgba(0,0,0,.15); max-width: 340px; }
+  .toast-item.ok { background: #065f46; }
+  .toast-item.err { background: #991b1b; }
+
     /* Skeleton loaders */
     .skeleton-grid { display: grid; gap: 14px; grid-template-columns: repeat(2, minmax(0,1fr)); }
     @media (min-width: 768px){ .skeleton-grid { grid-template-columns: repeat(4, minmax(0,1fr)); } }
@@ -213,6 +225,7 @@ import { AuthService } from '../../shared/auth.service';
 export class SettingsComponent {
   private api = inject(ApiService);
   auth = inject(AuthService);
+  private router = inject(Router);
   activeTab: 'profile'|'api' = 'profile';
   apiBaseUrl = localStorage.getItem('mm.apiBase') || this.api.apiBase;
   testStatus: string | null = null;
@@ -230,6 +243,10 @@ export class SettingsComponent {
   myBalance = 0;
   showCurrent = false;
   showNew = false;
+  // toast
+  toastVisible = false;
+  toastMsg = '';
+  toastKind: 'success'|'error' = 'success';
 
   ngOnInit(){
     // Choose tab based on route path
@@ -260,7 +277,12 @@ export class SettingsComponent {
   changePassword(){
     this.pwMsg = null; this.pwOk = false; this.loading = true;
     this.api.changePassword(this.currentPassword, this.newPassword).subscribe({
-      next: () => { this.pwMsg = 'Password updated. Please login again.'; this.pwOk = true; this.auth.logout(); },
+      next: () => {
+        this.pwMsg = 'Password updated. Please login again.'; this.pwOk = true;
+        this.showToast('Password changed successfully');
+        // log out and redirect after a short delay so user can see the toast
+        setTimeout(() => { this.auth.logout(); this.router.navigateByUrl('/login'); }, 800);
+      },
       error: (e) => {
         if (e?.status === 404) {
           this.pwMsg = 'This server version does not yet support password change. Please update the server.';
@@ -284,6 +306,11 @@ export class SettingsComponent {
     const label = ['Weak','Fair','Strong'][Math.max(0, Math.min(2, score-1))] || 'Weak';
     const color = score>=3 ? '#059669' : score==2 ? '#2563eb' : '#e11d48';
     return { score, label, color };
+  }
+
+  private showToast(msg: string, kind: 'success'|'error'='success'){
+    this.toastMsg = msg; this.toastKind = kind; this.toastVisible = true;
+    setTimeout(() => { this.toastVisible = false; }, 2200);
   }
 
   save() {
