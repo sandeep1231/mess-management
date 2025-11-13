@@ -16,12 +16,26 @@ export class ApiService {
     const nativeApiBase = 'https://mess-management-ttus.onrender.com/api';
     // 1) Native apps always use the deployed API (reliable public endpoint)
     if (isNative) return nativeApiBase;
-    // 2) Respect explicit absolute overrides
-    if (saved && /^https?:\/\//.test(saved)) return saved;
-    // 3) If running on a non-localhost origin, prefer same-origin /api
+    // 2) Respect explicit absolute overrides, except when they point to localhost on a non-localhost origin
     const loc = w?.location as Location | undefined;
     const host = loc?.hostname || '';
-    const isLocalHost = /^(localhost|127\.0\.0\.1|\[::1\])$/.test(host);
+    const isLocalHost = /^(localhost|127\.0\.0\.1|\[::1\])$/i.test(host);
+    if (saved && /^https?:\/\//.test(saved)) {
+      try {
+        const u = new URL(saved);
+        const savedIsLocal = /^(localhost|127\.0\.0\.1|\[::1\])$/i.test(u.hostname);
+        if (savedIsLocal && !isLocalHost) {
+          // We're running on a remote host (e.g., Render) but a localhost override is saved.
+          // Ignore and clear it to prevent confusion.
+          localStorage.removeItem('mm.apiBase');
+        } else {
+          return saved;
+        }
+      } catch {
+        // fall through to other strategies
+      }
+    }
+    // 3) If running on a non-localhost origin, prefer same-origin /api
     if (loc && !isLocalHost) {
       return `${loc.origin}/api`;
     }
